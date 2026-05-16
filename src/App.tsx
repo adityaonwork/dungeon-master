@@ -184,7 +184,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4 md:gap-6">
             <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-              <Shield className="w-4 h-4 md:w-5 md:h-5 text-white shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+              <Shield className="w-5 h-5 md:w-6 md:h-6 text-white shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
               <span className="fantasy-title text-sm md:text-xl group-hover:text-neutral-300 transition-colors glitch-text">DUNGEON QUEST</span>
             </div>
             <nav className="hidden lg:flex items-center gap-1">
@@ -217,7 +217,7 @@ export default function App() {
               </span>
               <span className="text-[10px] md:text-xs font-bold text-white uppercase tracking-widest font-mono">{profile.gold}G</span>
             </div>
-            <div className="w-6 h-6 md:w-8 md:h-8 border border-white/30 overflow-hidden bg-white/5 rounded-none shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+            <div className="w-8 h-8 md:w-10 md:h-10 border border-white/30 overflow-hidden bg-white/5 rounded-none shadow-[0_0_10px_rgba(255,255,255,0.2)]">
               <img src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${profile.displayName}&backgroundColor=000000`} alt="avatar" className="w-full h-full object-cover" />
             </div>
           </div>
@@ -225,23 +225,25 @@ export default function App() {
       </header>
 
       {/* Mobile Nav Bar */}
-      <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50 bg-black/80 backdrop-blur-xl border border-white/20 p-2 flex items-center justify-around shadow-2xl">
+      <div className="lg:hidden sticky top-16 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10 p-1 flex items-center justify-around shadow-xl">
         {[
-          { id: 'dashboard', icon: LayoutDashboard },
-          { id: 'quests', icon: Scroll },
-          { id: 'progress', icon: Zap },
-          { id: 'roadmap', icon: BookOpen },
-          { id: 'leaderboard', icon: Trophy }
+          { id: 'dashboard', icon: LayoutDashboard, label: 'HUB' },
+          { id: 'quests', icon: Scroll, label: 'QUESTS' },
+          { id: 'progress', icon: Zap, label: 'STATS' },
+          { id: 'roadmap', icon: BookOpen, label: 'MAP' },
+          { id: 'leaderboard', icon: Trophy, label: 'SQUAD' }
         ].map(tab => (
           <button 
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={cn(
-              "p-3 transition-all rounded-none",
-              activeTab === tab.id ? "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]" : "text-white/40"
+              "flex flex-col items-center gap-1 p-2 transition-all rounded-none min-w-[60px]",
+              activeTab === tab.id ? "text-white" : "text-white/30"
             )}
           >
-            <tab.icon className="w-5 h-5" />
+            <tab.icon className={cn("w-4 h-4", activeTab === tab.id && "drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]")} />
+            <span className="text-[8px] font-black uppercase tracking-widest">{tab.label}</span>
+            {activeTab === tab.id && <motion.div layoutId="mobile-nav-indicator" className="w-4 h-0.5 bg-white mt-0.5" />}
           </button>
         ))}
       </div>
@@ -385,7 +387,7 @@ function Dashboard({ profile, setProfile, quests, setQuests, setActiveTab, setSh
              <img 
                src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${profile.displayName}&size=200&backgroundColor=000000`} 
                alt="char" 
-               className="w-full h-full object-contain p-20 group-hover:scale-110 transition-transform duration-500" 
+               className="w-full h-full object-contain p-32 group-hover:scale-110 transition-transform duration-500" 
              />
              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
              <div className="absolute bottom-6 left-6 right-6">
@@ -733,7 +735,7 @@ function QuestBoard({ profile, quests, setQuests }: { profile: UserProfile, ques
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 pb-32 lg:pb-0">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 pb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter">Quest Board</h2>
@@ -947,7 +949,7 @@ function QuestBoard({ profile, quests, setQuests }: { profile: UserProfile, ques
 
 function RoadmapView() {
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 pb-32 water-flow p-4 md:p-8 rounded-none">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 pb-8 water-flow p-4 md:p-8 rounded-none">
        <div className="text-center space-y-4 max-w-3xl mx-auto pt-6 lg:pt-0">
          <h1 className="fantasy-title text-5xl text-white tracking-tighter glitch-text">75-Day Quest Codex</h1>
          <p className="text-white/40 text-xs sm:text-sm uppercase tracking-[0.3em] font-mono leading-relaxed">
@@ -1108,7 +1110,7 @@ function ProgressView({ quests, profile }: { quests: Quest[], profile: UserProfi
   const COLORS = ['#FFFFFF', '#A3A3A3', '#525252', '#262626', '#737373'];
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12 pb-32 lg:pb-0 water-flow p-4 md:p-8 rounded-none min-h-[80vh]">
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12 pb-8 water-flow p-4 md:p-8 rounded-none min-h-[80vh]">
       <div className="text-center space-y-4 max-w-2x mx-auto pt-6 lg:pt-0">
         <h1 className="fantasy-title text-2xl md:text-5xl tracking-tighter text-white glitch-text">Evolution Analytics</h1>
         <p className="text-white/40 text-[8px] md:text-[10px] font-mono uppercase tracking-[0.4em]">Visualizing the transmutation of self.</p>
@@ -1207,7 +1209,7 @@ function Leaderboard() {
   ];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 pb-32 lg:pb-0">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 pb-8">
       <div className="text-center space-y-4 pt-6 md:pt-0">
         <h2 className="fantasy-title text-3xl md:text-5xl text-white glitch-text">Hall of Legends</h2>
         <p className="text-white/40 text-[9px] md:text-xs font-mono uppercase tracking-[0.4em]">The elite who mastered the flow.</p>
