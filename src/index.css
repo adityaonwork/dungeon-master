@@ -10,7 +10,7 @@
 
 @layer base {
   body {
-    @apply bg-[#0c0c0e] text-[#e2e8f0];
+    @apply bg-black text-white selection:bg-white/20;
     -webkit-font-smoothing: antialiased;
     perspective: 1000px;
   }
@@ -27,23 +27,82 @@
   }
 
   .fantasy-title {
-    @apply font-fantasy uppercase tracking-[0.05em];
+    @apply font-fantasy uppercase tracking-[0.2em] text-white;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
   }
 
   .stat-box {
-    @apply bg-white/3 border-2 border-white/10 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)];
+    @apply bg-zinc-950 border border-white/20 shadow-[0_0_20px_rgba(0,0,0,0.8)] backdrop-blur-xl;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+  }
+
+  .stat-box:hover {
+    @apply border-white/60 bg-zinc-900;
+    transform: scale(1.02) translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+  }
+
+  .danger-mode {
+    @apply border-2 border-white bg-black;
+    clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+  }
+  
+  .glitch-text:hover {
+    animation: glitch 0.3s cubic-bezier(.25,.46,.45,.94) both infinite;
+  }
+
+  @keyframes glitch {
+    0% { transform: translate(0); text-shadow: -2px 0 red, 2px 0 blue; }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); text-shadow: 2px 0 red, -2px 0 blue; }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); text-shadow: -2px 0 red, 2px 0 blue; }
+    100% { transform: translate(0); }
   }
 
   .active-quest {
-    @apply border-l-4 border-amber-500 bg-gradient-to-r from-amber-500/10 to-transparent;
+    @apply border-l-4 border-white bg-white/5;
   }
 
-  .wealth-mode {
-    @apply border-2 border-[#d4af37] bg-gradient-to-br from-[#d4af37]/10 to-transparent;
-  }
-  
   .progress-bar-glow {
-    @apply shadow-[0_0_20px_rgba(59,130,246,0.3)];
+    @apply shadow-[0_0_20px_rgba(255,255,255,0.4)];
+  }
+
+  .water-flow {
+    background: linear-gradient(180deg, #000 0%, #050505 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .water-flow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(255,255,255,0.03) 0, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(255,255,255,0.03) 0, transparent 50%);
+    pointer-events: none;
+  }
+
+  .water-flow::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(255,255,255,0.05) 50%, 
+      transparent
+    );
+    animation: slide 10s linear infinite;
+  }
+
+  @keyframes slide {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
   }
 }
 

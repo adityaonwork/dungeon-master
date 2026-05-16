@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Sword, Coins, Trophy, User, LogIn, Swords, Scroll, Timer, CheckCircle, XCircle, Plus, LayoutDashboard, ListOrdered, Flame, Zap, Sparkles, BookOpen, HeartPulse, GraduationCap } from 'lucide-react';
+import { Shield, Sword, Coins, Trophy, User, LogIn, Swords, Scroll, Timer, CheckCircle, XCircle, Plus, LayoutDashboard, ListOrdered, Flame, Zap, Sparkles, BookOpen, HeartPulse, GraduationCap, RotateCcw, ZapOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { cn } from './lib/utils';
 import { ROADMAP_WEEKS, CORE_RULES, DAILY_REHAB } from './roadmapData';
 
@@ -67,6 +68,9 @@ interface Quest {
   remainingSeconds: number;
   status: 'Active' | 'Completed' | 'Failed' | 'In-Progress';
   createdAt: number;
+  isTimed?: boolean;
+  type?: 'Main' | 'Side';
+  category?: 'Might' | 'Arcane' | 'Endurance' | 'Discipline' | 'General';
 }
 
 const INITIAL_PROFILE: UserProfile = {
@@ -83,7 +87,7 @@ const INITIAL_PROFILE: UserProfile = {
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(INITIAL_PROFILE);
   const [quests, setQuests] = useState<Quest[]>([]);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'quests' | 'leaderboard' | 'roadmap'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'quests' | 'leaderboard' | 'roadmap' | 'progress'>('dashboard');
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLevelUp, setShowLevelUp] = useState(false);
 
@@ -91,11 +95,11 @@ export default function App() {
   useEffect(() => {
     const timer = setInterval(() => {
       setQuests(prev => prev.map(q => {
-        if (q.status === 'In-Progress' && q.remainingSeconds > 0) {
+        const isTimed = q.isTimed !== false; // Default to timed
+        if (q.status === 'In-Progress' && isTimed && q.remainingSeconds > 0) {
           return { ...q, remainingSeconds: q.remainingSeconds - 1 };
         }
-        if (q.status === 'In-Progress' && q.remainingSeconds === 0) {
-          // Auto-fail or notify? Let's just stop it
+        if (q.status === 'In-Progress' && isTimed && q.remainingSeconds === 0) {
           return { ...q, status: 'Active' }; 
         }
         return q;
@@ -165,28 +169,29 @@ export default function App() {
     }
   }, [profile, quests, isInitialized]);
 
-  if (!isInitialized) return <div className="min-h-screen bg-[#0c0c0e] flex items-center justify-center text-amber-500 font-fantasy tracking-widest uppercase">INITIALIZING DUNGEON...</div>;
+  if (!isInitialized) return <div className="min-h-screen bg-black flex items-center justify-center text-white font-fantasy tracking-widest uppercase">INITIALIZING DUNGEON...</div>;
 
   return (
-    <div className="min-h-screen bg-[#0c0c0e] text-[#e2e8f0] flex flex-col font-sans selection:bg-amber-500/30 overflow-x-hidden relative">
+    <div className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-white/20 overflow-x-hidden relative">
       {/* Background Atmosphere */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-500/5 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full animate-pulse [animation-delay:2s]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/5 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neutral-800/20 blur-[120px] rounded-full animate-pulse [animation-delay:2s]" />
       </div>
 
       {/* Header / HUD */}
-      <header className="border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-black/40 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-              <Shield className="w-6 h-6 text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]" />
-              <span className="fantasy-title text-xl group-hover:text-amber-500 transition-colors">DUNGEON QUEST</span>
+              <Shield className="w-6 h-6 text-white shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+              <span className="fantasy-title text-xl group-hover:text-neutral-300 transition-colors glitch-text">DUNGEON QUEST</span>
             </div>
             <nav className="hidden md:flex items-center gap-1">
               {[
                 { id: 'dashboard', icon: LayoutDashboard, label: 'HUB' },
                 { id: 'quests', icon: Scroll, label: 'QUESTS' },
+                { id: 'progress', icon: Zap, label: 'PROG' },
                 { id: 'roadmap', icon: BookOpen, label: 'ROADMAP' },
                 { id: 'leaderboard', icon: Trophy, label: 'SQUAD' }
               ].map(tab => (
@@ -195,7 +200,7 @@ export default function App() {
                   onClick={() => setActiveTab(tab.id as any)}
                   className={cn(
                     "px-4 py-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-white/5 rounded-none border-b-2 border-transparent",
-                    activeTab === tab.id && "border-amber-500 text-amber-500 bg-amber-500/5"
+                    activeTab === tab.id && "border-white text-white bg-white/5"
                   )}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -208,12 +213,12 @@ export default function App() {
           <div className="flex items-center gap-4">
             <div className="flex flex-col items-end">
               <span className="text-[10px] font-mono text-white/40 uppercase tracking-widest flex items-center gap-1">
-                <Flame className="w-2.5 h-2.5 text-orange-500" /> Day {profile.challengeDays} Streak
+                <Flame className="w-2.5 h-2.5 text-white/50" /> Day {profile.challengeDays} Streak
               </span>
-              <span className="text-xs font-bold text-amber-400 uppercase tracking-widest font-mono">{profile.gold} GOLD</span>
+              <span className="text-xs font-bold text-white uppercase tracking-widest font-mono">{profile.gold} GOLD</span>
             </div>
-            <div className="w-10 h-10 border-2 border-amber-500/30 overflow-hidden bg-white/5 rounded-lg shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-              <img src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${profile.displayName}`} alt="avatar" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 border-2 border-white/30 overflow-hidden bg-white/5 rounded-lg shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+              <img src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${profile.displayName}&backgroundColor=000000`} alt="avatar" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
@@ -233,11 +238,13 @@ export default function App() {
           )}
           {activeTab === 'quests' && (
             <QuestBoard 
+              profile={profile}
               quests={quests} 
               setQuests={setQuests} 
             />
           )}
           {activeTab === 'roadmap' && <RoadmapView />}
+          {activeTab === 'progress' && <ProgressView quests={quests} profile={profile} />}
           {activeTab === 'leaderboard' && <Leaderboard />}
         </AnimatePresence>
 
@@ -250,12 +257,12 @@ export default function App() {
               className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
               onClick={() => setShowLevelUp(false)}
             >
-              <div className="stat-box p-12 text-center space-y-6 rounded-3xl border-amber-500 shadow-[0_0_50px_rgba(245,158,11,0.5)]">
-                <Sparkles className="w-24 h-24 text-amber-500 mx-auto animate-bounce" />
-                <h2 className="fantasy-title text-6xl text-amber-500">LEVEL UP!</h2>
-                <p className="text-2xl font-bold font-mono tracking-tighter">You have reached Level {profile.level}</p>
+              <div className="stat-box p-12 text-center space-y-6 rounded-none border-white shadow-[0_0_50px_rgba(255,255,255,0.5)]">
+                <Sparkles className="w-24 h-24 text-white mx-auto animate-bounce" />
+                <h2 className="fantasy-title text-6xl text-white glitch-text">LEVEL UP!</h2>
+                <p className="text-2xl font-bold font-mono tracking-tighter text-white">You have reached Level {profile.level}</p>
                 <p className="text-white/40 uppercase tracking-[0.3em] text-xs">Your legend grows in the shadows.</p>
-                <button className="px-12 py-4 bg-amber-600 text-black font-black uppercase tracking-widest hover:bg-amber-500 transition-all rounded-xl shadow-2xl">
+                <button className="px-12 py-4 bg-white text-black font-black uppercase tracking-widest hover:bg-neutral-200 transition-all rounded-xl shadow-2xl">
                   Accept Reward
                 </button>
               </div>
@@ -273,7 +280,7 @@ export default function App() {
               localStorage.clear();
               window.location.reload();
             }
-          }} className="hover:text-red-500 transition-colors">RESET ADVENTURE</button>
+          }} className="hover:text-white transition-colors">RESET ADVENTURE</button>
         </div>
       </footer>
     </div>
@@ -348,55 +355,55 @@ function Dashboard({ profile, setProfile, quests, setQuests, setActiveTab, setSh
       className="grid grid-cols-12 gap-8"
     >
       <div className="col-span-12 lg:col-span-3 space-y-8">
-        <div className="relative group stat-box rounded-xl">
+        <motion.div whileHover={{ scale: 1.05 }} className="relative group stat-box rounded-none">
            <div className="p-4 border-b border-white/5 bg-white/5">
-             <span className="text-[10px] font-mono text-amber-500 uppercase tracking-widest font-black">Week {currentWeekNum}: {currentWeek.title}</span>
+             <span className="text-[10px] font-mono text-white/60 uppercase tracking-widest font-black">Week {currentWeekNum}: {currentWeek.title}</span>
            </div>
-          <div className="aspect-[3/4] bg-white/5 relative overflow-hidden rounded-b-xl">
+          <div className="aspect-[3/4] bg-white/5 relative overflow-hidden rounded-none">
              <img 
-               src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${profile.displayName}&size=200`} 
+               src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${profile.displayName}&size=200&backgroundColor=000000`} 
                alt="char" 
                className="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" 
              />
              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
              <div className="absolute bottom-6 left-6 right-6">
-               <h2 className="fantasy-title text-2xl text-amber-500 drop-shadow-lg">{profile.displayName}</h2>
+               <h2 className="fantasy-title text-2xl text-white drop-shadow-lg glitch-text">{profile.displayName}</h2>
                <p className="text-white/40 text-[10px] font-mono tracking-[0.2em] font-bold">Lvl {profile.level} {profile.charClass}</p>
              </div>
           </div>
-          <div className="absolute -top-2 -left-2 w-8 h-8 border-t-2 border-l-2 border-amber-500/50" />
-          <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-2 border-r-2 border-amber-500/50" />
-        </div>
+          <div className="absolute -top-2 -left-2 w-8 h-8 border-t-2 border-l-2 border-white/20" />
+          <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-2 border-r-2 border-white/20" />
+        </motion.div>
 
         <div className="grid grid-cols-1 gap-4">
-          <SkillBar label="Might" value={profile.stats.str} color="bg-amber-600" />
-          <SkillBar label="Arcane" value={profile.stats.int} color="bg-blue-600" />
+          <SkillBar label="Might" value={profile.stats.str} color="bg-white" />
+          <SkillBar label="Arcane" value={profile.stats.int} color="bg-neutral-500" />
         </div>
       </div>
 
       <div className="col-span-12 lg:col-span-9 space-y-8">
-        <div className="wealth-mode p-8 space-y-6 relative overflow-hidden rounded-2xl">
+        <div className="danger-mode p-8 space-y-6 relative overflow-hidden rounded-none">
           <div className="absolute top-0 right-0 p-2 opacity-5">
             <Shield className="w-48 h-48" />
           </div>
           
           <div className="space-y-4">
-            <h3 className="fantasy-title text-3xl text-amber-200">Current Phase: {currentWeek.title}</h3>
-            <p className="text-amber-100/40 text-[10px] font-mono tracking-widest uppercase">75-Day Zero-to-Hero Challenge</p>
+            <h3 className="fantasy-title text-3xl text-white glitch-text">Current Phase: {currentWeek.title}</h3>
+            <p className="text-white/40 text-[10px] font-mono tracking-widest uppercase">75-Day Zero-to-Hero Challenge</p>
             <div className="flex flex-wrap gap-2 pt-2">
                {currentWeek.dsa.slice(0, 3).map((tag, i) => (
-                 <span key={i} className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-black uppercase tracking-widest rounded-full">{tag}</span>
+                 <span key={i} className="px-3 py-1 bg-white/10 text-white border border-white/20 text-[9px] font-black uppercase tracking-widest rounded-none">{tag}</span>
                ))}
                {currentWeek.ai_ml.slice(0, 2).map((tag, i) => (
-                 <span key={i} className="px-3 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[9px] font-black uppercase tracking-widest rounded-full">{tag}</span>
+                 <span key={i} className="px-3 py-1 bg-neutral-800 text-neutral-400 border border-neutral-700 text-[9px] font-black uppercase tracking-widest rounded-none">{tag}</span>
                ))}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatBox icon={Scroll} label="Quests Cleared" value={`${completedCount}/${activeCount + completedCount}`} />
-            <StatBox icon={Coins} label="Gold Stash" value={profile.gold.toString()} color="text-amber-400" />
-            <StatBox icon={Flame} label="Daily Streak" value={profile.challengeDays.toString()} color="text-orange-500" />
+            <StatBox icon={Coins} label="Gold Stash" value={profile.gold.toString()} color="text-white" />
+            <StatBox icon={Flame} label="Daily Streak" value={profile.challengeDays.toString()} color="text-neutral-400" />
           </div>
 
           {!verdict ? (
@@ -405,15 +412,15 @@ function Dashboard({ profile, setProfile, quests, setQuests, setActiveTab, setSh
               disabled={comparing || quests.length === 0}
               className={cn(
                 "w-full h-24 border-2 border-dashed border-white/10 rounded-xl transition-all group flex flex-col items-center justify-center gap-2",
-                quests.length > 0 ? "hover:border-amber-500/50 hover:bg-amber-500/5 cursor-pointer shadow-xl" : "opacity-30 cursor-not-allowed"
+                quests.length > 0 ? "hover:border-white/50 hover:bg-white/5 cursor-pointer shadow-xl" : "opacity-30 cursor-not-allowed"
               )}
             >
               {comparing ? (
-                <span className="text-amber-500 animate-pulse font-mono uppercase tracking-[0.4em] text-xs">Consulting the Throne...</span>
+                <span className="text-white animate-pulse font-mono uppercase tracking-[0.4em] text-xs">Consulting the Throne...</span>
               ) : (
                 <>
-                  <Scroll className="w-8 h-8 text-white/20 group-hover:text-amber-500 transition-colors" />
-                  <span className="fantasy-title text-xs group-hover:text-amber-500">
+                  <Scroll className="w-8 h-8 text-white/20 group-hover:text-white transition-colors" />
+                  <span className="fantasy-title text-xs group-hover:text-white">
                     {quests.length === 0 ? "Bounties Required" : "Submit Report"}
                   </span>
                 </>
@@ -423,24 +430,24 @@ function Dashboard({ profile, setProfile, quests, setQuests, setActiveTab, setSh
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-amber-500/5 border-2 border-amber-500/20 p-6 space-y-4 rounded-xl shadow-2xl card-3d"
+              className="bg-white/5 border-2 border-white/10 p-6 space-y-4 rounded-xl shadow-2xl card-3d"
             >
-              <div className="flex items-center justify-between border-b border-amber-500/10 pb-3">
-                <span className="fantasy-title text-xs text-amber-500">The Mentor's Counsel</span>
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <span className="fantasy-title text-xs text-white">The Mentor's Counsel</span>
                 <div className="flex items-center gap-2">
                    <button onClick={() => setVerdict(null)} className="text-[10px] text-white/30 uppercase tracking-widest hover:text-white transition-colors">Dismiss</button>
-                   <span className="px-4 py-1 bg-amber-500 text-black text-[10px] font-black uppercase tracking-tighter shadow-lg">Rank {verdict.rank}</span>
+                   <span className="px-4 py-1 bg-white text-black text-[10px] font-black uppercase tracking-tighter shadow-lg">Rank {verdict.rank}</span>
                 </div>
               </div>
-              <p className="text-sm italic text-amber-100/90 leading-relaxed font-serif">"{verdict.verdict}"</p>
+              <p className="text-sm italic text-white/90 leading-relaxed font-serif">"{verdict.verdict}"</p>
               <div className="flex gap-6 text-[10px] font-mono uppercase tracking-widest border-t border-white/5 pt-4">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-3 h-3 text-blue-400" />
-                  <span className="text-blue-400">+{verdict.xpAwarded} XP</span>
+                  <Zap className="w-3 h-3 text-neutral-300" />
+                  <span className="text-neutral-300">+{verdict.xpAwarded} XP</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Coins className="w-3 h-3 text-amber-400" />
-                  <span className="text-amber-400">+{verdict.goldAwarded} GOLD</span>
+                  <Coins className="w-3 h-3 text-white" />
+                  <span className="text-white">+{verdict.goldAwarded} GOLD</span>
                 </div>
               </div>
             </motion.div>
@@ -450,7 +457,7 @@ function Dashboard({ profile, setProfile, quests, setQuests, setActiveTab, setSh
         <div className="space-y-6">
            <div className="flex items-center justify-between border-b border-white/5 pb-2">
              <h4 className="fantasy-title text-sm opacity-50">Active Contracts</h4>
-             <button onClick={() => setActiveTab('quests')} className="text-[10px] text-amber-500 uppercase tracking-[0.2em] font-bold hover:underline transition-all">Visit the Board</button>
+             <button onClick={() => setActiveTab('quests')} className="text-[10px] text-white uppercase tracking-[0.2em] font-bold hover:underline transition-all">Visit the Board</button>
            </div>
            <QuestPreview quests={quests} setQuests={setQuests} />
         </div>
@@ -465,10 +472,10 @@ function Dashboard({ profile, setProfile, quests, setQuests, setActiveTab, setSh
                 return (
                   <div key={ach.id} className={cn(
                     "stat-box p-4 rounded-xl flex flex-col items-center text-center gap-2 transition-all card-3d",
-                    isUnlocked ? "border-amber-500/50 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.1)]" : "opacity-30 grayscale"
+                    isUnlocked ? "border-white/50 bg-white/5 shadow-[0_0_15px_rgba(255,255,255,0.1)]" : "opacity-30 grayscale"
                   )}>
                     <span className="text-3xl mb-1">{ach.icon}</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">{ach.name}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white">{ach.name}</span>
                     <span className="text-[8px] text-white/40 leading-tight">{ach.description}</span>
                   </div>
                 );
@@ -479,12 +486,12 @@ function Dashboard({ profile, setProfile, quests, setQuests, setActiveTab, setSh
         <div className="h-32 stat-box rounded-xl p-6 flex flex-col justify-between border-dashed border-white/20">
           <div className="flex justify-between items-center">
             <span className="fantasy-title text-xs opacity-70">Mastery Progress</span>
-            <span className="mono text-xs text-blue-400">{profile.xp % 100} / 100 XP</span>
+            <span className="mono text-xs text-neutral-400">{profile.xp % 100} / 100 XP</span>
           </div>
           <div className="w-full h-8 bg-black/40 rounded border border-white/10 p-1 relative overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded flex items-center px-4 overflow-hidden relative z-10 progress-bar-glow" style={{ width: `${profile.xp % 100}%` }}>
+            <div className="h-full bg-gradient-to-r from-white to-neutral-500 rounded flex items-center px-4 overflow-hidden relative z-10 progress-bar-glow" style={{ width: `${profile.xp % 100}%` }}>
               <div className="absolute inset-0 diagonal-stripes opacity-20"></div>
-              <span className="text-[10px] font-black tracking-tighter text-white relative z-10 uppercase italic">
+              <span className="text-[10px] font-black tracking-tighter text-black relative z-10 uppercase italic">
                 {profile.xp % 100 > 50 ? "Approaching Enlightenment" : "Ascending the Tower"}
               </span>
             </div>
@@ -551,28 +558,28 @@ function QuestPreview({ quests, setQuests }: { quests: Quest[], setQuests: React
           <div className="flex items-center gap-4">
             <div className={cn(
               "w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]",
-              quest.difficulty === 'Easy' && "text-green-500 bg-green-500",
-              quest.difficulty === 'Medium' && "text-blue-500 bg-blue-500",
-              quest.difficulty === 'Hard' && "text-red-500 bg-red-500",
-              quest.difficulty === 'Epic' && "text-purple-500 bg-purple-500"
+              quest.difficulty === 'Easy' && "text-neutral-500 bg-neutral-500",
+              quest.difficulty === 'Medium' && "text-neutral-400 bg-neutral-400",
+              quest.difficulty === 'Hard' && "text-white bg-white",
+              quest.difficulty === 'Epic' && "text-neutral-200 bg-neutral-200"
             )} />
             <div>
-              <div className="fantasy-title text-sm group-hover:text-amber-500 transition-colors uppercase tracking-tight">{quest.title}</div>
+              <div className="fantasy-title text-sm group-hover:text-white transition-colors uppercase tracking-tight">{quest.title}</div>
               <div className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-mono">
                 {quest.difficulty} / {quest.status === 'In-Progress' ? formatTime(quest.remainingSeconds) : `${quest.durationMinutes}m`}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {quest.status === 'In-Progress' && <span className="text-[10px] font-mono text-amber-500 animate-pulse">EMBARKED...</span>}
+            {quest.status === 'In-Progress' && <span className="text-[10px] font-mono text-white animate-pulse">EMBARKED...</span>}
             {quest.status === 'Completed' ? (
-              <CheckCircle className="w-5 h-5 text-green-500" />
+              <CheckCircle className="w-5 h-5 text-white" />
             ) : (
               <button 
                 onClick={() => toggleEmbark(quest.id)}
                 className={cn(
                   "p-2 rounded-lg transition-all",
-                  quest.status === 'In-Progress' ? "bg-red-500/20 text-red-500" : "bg-amber-500/20 text-amber-500"
+                  quest.status === 'In-Progress' ? "bg-white/20 text-white" : "bg-neutral-800 text-white"
                 )}
               >
                 <Timer className={cn("w-4 h-4", quest.status === 'In-Progress' && "animate-spin-slow")} />
@@ -586,10 +593,12 @@ function QuestPreview({ quests, setQuests }: { quests: Quest[], setQuests: React
   );
 }
 
-function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.Dispatch<React.SetStateAction<Quest[]>> }) {
+function QuestBoard({ profile, quests, setQuests }: { profile: UserProfile, quests: Quest[], setQuests: React.Dispatch<React.SetStateAction<Quest[]>> }) {
   const [newTitle, setNewTitle] = useState('');
   const [difficulty, setDifficulty] = useState<Quest['difficulty']>('Medium');
   const [duration, setDuration] = useState(30);
+  const [category, setCategory] = useState<Quest['category']>('General');
+  const [isTimed, setIsTimed] = useState(true);
 
   const addQuest = (e: React.FormEvent) => {
     e.preventDefault();
@@ -601,7 +610,10 @@ function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.D
       durationMinutes: duration,
       remainingSeconds: duration * 60,
       status: 'Active',
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      type: 'Side',
+      category,
+      isTimed
     };
     setQuests([newQuest, ...quests]);
     setNewTitle('');
@@ -616,12 +628,44 @@ function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.D
     }));
   };
 
+  const refreshQuest = (id: string) => {
+    setQuests(prev => prev.map(q => {
+      if (q.id === id) {
+        return { ...q, remainingSeconds: q.durationMinutes * 60 };
+      }
+      return q;
+    }));
+  };
+
+  const removeTimeLimit = (id: string) => {
+    setQuests(prev => prev.map(q => {
+      if (q.id === id) {
+        return { ...q, isTimed: false };
+      }
+      return q;
+    }));
+  };
+
   const completeQuest = (id: string) => {
     setQuests(quests.map(q => q.id === id ? { ...q, status: 'Completed' } : q));
   };
 
   const deleteQuest = (id: string) => {
     setQuests(quests.filter(q => q.id !== id));
+  };
+
+  const renewQuest = (id: string) => {
+    setQuests(prev => prev.map(q => {
+      if (q.id === id) {
+        return { 
+          ...q, 
+          status: 'Active', 
+          remainingSeconds: q.durationMinutes * 60,
+          createdAt: Date.now() 
+        };
+      }
+      return q;
+    }));
   };
 
   const loadRoadmapQuests = async () => {
@@ -636,7 +680,9 @@ function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.D
         durationMinutes: 45,
         remainingSeconds: 45 * 60,
         status: 'Active' as const,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        type: 'Main' as const,
+        category: 'Arcane' as const
       })),
        ...currentWeek.ai_ml.slice(0, 1).map(task => ({
         id: Math.random().toString(36).substr(2, 9),
@@ -645,7 +691,9 @@ function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.D
         durationMinutes: 60,
         remainingSeconds: 60 * 60,
         status: 'Active' as const,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        type: 'Main' as const,
+        category: 'Arcane' as const
       })),
       {
         id: Math.random().toString(36).substr(2, 9),
@@ -654,7 +702,9 @@ function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.D
         durationMinutes: 15,
         remainingSeconds: 15 * 60,
         status: 'Active' as const,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        type: 'Main' as const,
+        category: 'Discipline' as const
       }
     ];
     setQuests([...newQuests, ...quests]);
@@ -669,7 +719,7 @@ function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.D
         </div>
         <button 
           onClick={loadRoadmapQuests}
-          className="px-6 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2 rounded-lg"
+          className="px-6 py-2 bg-white/10 text-white border border-white/30 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-2 rounded-lg"
         >
           <BookOpen className="w-4 h-4" />
           Import from Roadmap
@@ -678,25 +728,42 @@ function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.D
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="space-y-6">
-          <form onSubmit={addQuest} className="stat-box p-6 space-y-4 rounded-2xl">
-            <h3 className="fantasy-title text-sm text-amber-500">Post New Bounty</h3>
+          <form onSubmit={addQuest} className="stat-box p-6 space-y-4 rounded-2xl border-white/20">
+            <div className="flex items-center justify-between">
+              <h3 className="fantasy-title text-sm text-white">Add Side Quest</h3>
+              <Zap className="w-4 h-4 text-white animate-pulse" />
+            </div>
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-mono font-bold">Mission Name</label>
                 <input 
                   value={newTitle}
                   onChange={e => setNewTitle(e.target.value)}
-                  className="w-full bg-black/40 border-2 border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-amber-500 transition-colors uppercase tracking-tight font-bold"
-                  placeholder="E.G. CLEAR THE GYM..." 
+                  className="w-full bg-black/40 border-2 border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-white transition-colors uppercase tracking-tight font-bold"
+                  placeholder="E.G. STUDY LINKED LISTS..." 
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-mono font-bold">Path</label>
+                  <select 
+                    value={category}
+                    onChange={e => setCategory(e.target.value as any)}
+                    className="w-full bg-black/40 border-2 border-white/10 rounded-lg px-2 py-3 text-sm focus:outline-none focus:border-white transition-colors uppercase tracking-tight font-bold appearance-none text-center"
+                  >
+                    <option>Might</option>
+                    <option>Arcane</option>
+                    <option>Endurance</option>
+                    <option>Discipline</option>
+                    <option>General</option>
+                  </select>
+                </div>
                 <div className="space-y-2">
                   <label className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-mono font-bold">Difficulty</label>
                   <select 
                     value={difficulty}
                     onChange={e => setDifficulty(e.target.value as any)}
-                    className="w-full bg-black/40 border-2 border-white/10 rounded-lg px-2 py-3 text-sm focus:outline-none focus:border-amber-500 transition-colors uppercase tracking-tight font-bold appearance-none text-center"
+                    className="w-full bg-black/40 border-2 border-white/10 rounded-lg px-2 py-3 text-sm focus:outline-none focus:border-white transition-colors uppercase tracking-tight font-bold appearance-none text-center"
                   >
                     <option>Easy</option>
                     <option>Medium</option>
@@ -704,20 +771,26 @@ function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.D
                     <option>Epic</option>
                   </select>
                 </div>
-                <div className="space-y-2">
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-2 flex-1">
                   <label className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-mono font-bold">Time (Min)</label>
-                  <input type="number" value={duration} onChange={e => setDuration(parseInt(e.target.value))} className="w-full bg-black/40 border-2 border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-amber-500 transition-colors text-center font-mono font-bold" />
+                  <input type="number" value={duration} onChange={e => setDuration(parseInt(e.target.value))} className="w-full bg-black/40 border-2 border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-white transition-colors text-center font-mono font-bold" />
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                   <label className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-mono font-bold">Timed</label>
+                   <input type="checkbox" checked={isTimed} onChange={e => setIsTimed(e.target.checked)} className="w-6 h-6 border-2 border-white/10 bg-black/40 rounded checked:bg-white" />
                 </div>
               </div>
-              <button className="w-full bg-amber-600 hover:bg-amber-500 text-black font-black uppercase py-4 transition-all flex items-center justify-center gap-2 group shadow-xl rounded-lg">
+              <button className="w-full bg-white hover:bg-neutral-200 text-black font-black uppercase py-4 transition-all flex items-center justify-center gap-2 group shadow-xl rounded-lg">
                 <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-                Forge Contract
+                Sign Side Contract
               </button>
             </div>
           </form>
           
-          <div className="wealth-mode p-4 rounded-xl border-dashed border-opacity-30">
-            <h4 className="fantasy-title text-xs text-amber-500/70 mb-2">Architect's Guidance</h4>
+          <div className="wealth-mode p-4 rounded-xl border-dashed border-opacity-30 border-white/20">
+            <h4 className="fantasy-title text-xs text-white opacity-70 mb-2">Architect's Guidance</h4>
             <p className="text-[11px] text-white/40 leading-relaxed italic">"A true aristocrat optimizes the morning. Slay your epic contracts before the sun peaks."</p>
           </div>
         </div>
@@ -737,54 +810,105 @@ function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.D
                 className={cn(
                   "group relative border-l-4 p-6 transition-all rounded-r-2xl stat-box",
                   quest.status === 'Completed' ? "opacity-30 grayscale" : 
-                  quest.status === 'In-Progress' ? "active-quest animate-pulse border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.15)]" : 
-                  "active-quest hover:bg-white/5"
+                  quest.status === 'In-Progress' ? "active-quest border-white shadow-[0_0_30px_rgba(255,255,255,0.15)]" : 
+                  "hover:bg-white/5",
+                  quest.type === 'Side' && "border-l-neutral-500"
                 )}
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                      <span className="fantasy-title text-xl text-amber-100 group-hover:text-amber-500 transition-colors">{quest.title}</span>
-                      {quest.status === 'Completed' && <CheckCircle className="w-6 h-6 text-green-500" />}
-                      {quest.status === 'In-Progress' && <Flame className="w-5 h-5 text-amber-500 animate-bounce" />}
+                      <span className={cn(
+                        "fantasy-title text-xl transition-colors",
+                        quest.type === 'Side' ? "text-neutral-300 group-hover:text-white" : "text-white group-hover:text-neutral-300"
+                      )}>{quest.title}</span>
+                      {quest.status === 'Completed' && <CheckCircle className="w-6 h-6 text-white" />}
+                      {quest.status === 'In-Progress' && <Flame className="w-5 h-5 text-white animate-bounce" />}
+                      {quest.type === 'Side' && <span className="text-[8px] px-2 py-0.5 bg-white/10 text-white border border-white/20 rounded-full font-black uppercase">Side Quest</span>}
                     </div>
                     <div className="flex items-center gap-4 text-[10px] font-mono uppercase tracking-[0.3em] text-white/30">
                       <span className={cn(
                         "font-black tracking-tighter",
-                        quest.difficulty === 'Easy' && "text-green-500",
-                        quest.difficulty === 'Medium' && "text-blue-500",
-                        quest.difficulty === 'Hard' && "text-red-500",
-                        quest.difficulty === 'Epic' && "text-purple-500"
+                        quest.difficulty === 'Easy' && "text-neutral-400",
+                        quest.difficulty === 'Medium' && "text-neutral-300",
+                        quest.difficulty === 'Hard' && "text-neutral-200",
+                        quest.difficulty === 'Epic' && "text-white"
                       )}>{quest.difficulty}</span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
                         <Timer className={cn("w-3 h-3", quest.status === 'In-Progress' && "animate-spin-slow")} /> 
-                        {quest.status === 'In-Progress' ? formatTime(quest.remainingSeconds) : `${quest.durationMinutes}m`}
+                        {quest.isTimed === false ? "INFINITE" : (quest.status === 'In-Progress' ? formatTime(quest.remainingSeconds) : `${quest.durationMinutes}m`)}
                       </span>
+                      {quest.category && (
+                        <>
+                          <span>•</span>
+                          <span className="text-white/20">{quest.category}</span>
+                        </>
+                      )}
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3">
                     {quest.status === 'Active' ? (
-                      <button onClick={() => toggleEmbark(quest.id)} className="px-8 py-3 bg-amber-600/20 text-amber-500 border border-amber-500/50 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-black shadow-xl transition-all rounded-md">
+                      <button onClick={() => toggleEmbark(quest.id)} className={cn(
+                        "px-8 py-3 text-[10px] font-black uppercase tracking-widest shadow-xl transition-all rounded-md",
+                        quest.type === 'Side' ? "bg-white/10 text-white border border-white/30 hover:bg-white hover:text-black" : "bg-white/5 text-white border border-white/20 hover:bg-white hover:text-black"
+                      )}>
                         Embark
                       </button>
                     ) : quest.status === 'In-Progress' ? (
-                      <button onClick={() => completeQuest(quest.id)} className="px-8 py-3 bg-amber-600 text-black text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all rounded-md">
-                        Slay Task
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {quest.isTimed !== false && (
+                          <>
+                            <button 
+                              onClick={() => refreshQuest(quest.id)} 
+                              className="p-3 bg-white/5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                              title="Refresh Timer"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => removeTimeLimit(quest.id)} 
+                              className="p-3 bg-white/5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                              title="Remove Time Limit"
+                            >
+                              <ZapOff className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                        <button onClick={() => completeQuest(quest.id)} className="px-8 py-3 bg-white text-black text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-neutral-200 transition-all rounded-md">
+                          Slay Task
+                        </button>
+                      </div>
                     ) : (
-                      <button onClick={() => deleteQuest(quest.id)} className="p-3 bg-white/5 rounded-full text-white/20 hover:text-red-500 hover:bg-red-500/10 transition-all">
-                        <XCircle className="w-5 h-5" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                         <button 
+                          onClick={() => renewQuest(quest.id)} 
+                          className="p-3 bg-white/5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                          title="Renew Quest"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => deleteQuest(quest.id)} className="p-3 bg-white/5 rounded-full text-white/20 hover:text-red-500 hover:bg-red-500/10 transition-all">
+                          <XCircle className="w-5 h-5" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
                 <div className="mt-6 h-2 w-full bg-black/40 rounded-full overflow-hidden border border-white/5">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: quest.status === 'Completed' ? '100%' : quest.status === 'In-Progress' ? `${((quest.durationMinutes * 60 - quest.remainingSeconds) / (quest.durationMinutes * 60)) * 100}%` : '0%' }}
-                    className={cn("h-full duration-500 progress-bar-glow", quest.status === 'Completed' ? "bg-green-500" : "bg-amber-500")} 
+                    animate={{ 
+                      width: quest.status === 'Completed' ? '100%' : 
+                             quest.status === 'In-Progress' ? (
+                               quest.isTimed === false ? '100%' : `${((quest.durationMinutes * 60 - quest.remainingSeconds) / (quest.durationMinutes * 60)) * 100}%`
+                             ) : '0%' 
+                    }}
+                    className={cn(
+                      "h-full duration-500 progress-bar-glow", 
+                      quest.status === 'Completed' ? "bg-white" : (quest.type === 'Side' ? "bg-neutral-400" : "bg-neutral-600")
+                    )} 
                   >
                      <div className="w-full h-full diagonal-stripes opacity-20"></div>
                   </motion.div>
@@ -801,9 +925,9 @@ function QuestBoard({ quests, setQuests }: { quests: Quest[], setQuests: React.D
 
 function RoadmapView() {
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 pb-24">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 pb-24 water-flow p-8 rounded-3xl">
        <div className="text-center space-y-4 max-w-3xl mx-auto">
-         <h1 className="fantasy-title text-5xl text-amber-500 tracking-tighter">75-Day Quest Codex</h1>
+         <h1 className="fantasy-title text-5xl text-white tracking-tighter">75-Day Quest Codex</h1>
          <p className="text-white/40 text-xs sm:text-sm uppercase tracking-[0.3em] font-mono leading-relaxed">
            Transformation is not an event. It is a series of brutal, disciplined repetitions. 
            BTech 2nd Year Mastery Arc: DSA + AI/ML + Physical Ascension.
@@ -812,8 +936,8 @@ function RoadmapView() {
 
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
          {CORE_RULES.map((rule, idx) => (
-           <div key={idx} className="stat-box p-6 border-l-4 border-amber-500 rounded-r-xl bg-amber-500/5">
-             <span className="text-amber-500 font-mono text-[10px] font-black uppercase mb-1 block tracking-widest">Commandment {idx + 1}</span>
+           <div key={idx} className="stat-box p-6 border-l-4 border-white rounded-r-xl bg-white/5">
+             <span className="text-white font-mono text-[10px] font-black uppercase mb-1 block tracking-widest">Commandment {idx + 1}</span>
              <p className="text-xs font-bold leading-relaxed">{rule}</p>
            </div>
          ))}
@@ -821,13 +945,13 @@ function RoadmapView() {
 
        <div className="space-y-8">
          <div className="flex items-center gap-4">
-           <HeartPulse className="w-6 h-6 text-red-500" />
+           <HeartPulse className="w-6 h-6 text-white" />
            <h2 className="fantasy-title text-2xl">Daily Spine Rehab & Mobility</h2>
          </div>
          <div className="flex flex-wrap gap-3">
            {DAILY_REHAB.map((ex, i) => (
              <div key={i} className="px-6 py-3 stat-box rounded-lg flex items-center gap-3 hover:bg-white/5 transition-all">
-               <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+               <div className="w-1.5 h-1.5 rounded-full bg-white" />
                <span className="text-[11px] font-black uppercase tracking-widest">{ex}</span>
              </div>
            ))}
@@ -837,33 +961,48 @@ function RoadmapView() {
        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           <div className="space-y-6">
             <div className="flex items-center gap-4 border-b border-white/10 pb-4">
-              <GraduationCap className="w-8 h-8 text-blue-500" />
-              <h2 className="fantasy-title text-3xl">The Knowledge Roadmap</h2>
+              <GraduationCap className="w-8 h-8 text-neutral-400" />
+              <h2 className="fantasy-title text-3xl text-neutral-200">The Knowledge Roadmap</h2>
             </div>
             
+            <div className="space-y-4 mb-8">
+               <div className="stat-box p-6 bg-white/5 border-white/10 rounded-2xl">
+                 <h4 className="text-xs font-black uppercase tracking-widest text-white mb-2">Shadow Tip: Persistent Progress</h4>
+                 <p className="text-[10px] text-white/40 leading-relaxed uppercase font-mono">
+                   Your progress is automatically saved to your browser. To back up your journey or share your code:
+                   <br/><br/>
+                   1. Open <b>Settings</b> in the AI Studio sidebar.
+                   <br/>
+                   2. Click <b>'Export to GitHub'</b> or <b>'Download ZIP'</b>.
+                   <br/>
+                   3. Push your projects to GitHub to complete the "Shadow Monarch" legacy.
+                 </p>
+               </div>
+            </div>
+
             <div className="space-y-8">
               {ROADMAP_WEEKS.map((week) => (
                 <div key={week.week} className="relative pl-8 border-l border-white/10 group">
-                  <div className="absolute top-0 -left-[5px] w-[9px] h-[9px] rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] group-hover:scale-125 transition-transform" />
+                  <div className="absolute top-0 -left-[5px] w-[9px] h-[9px] rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] group-hover:scale-125 transition-transform" />
                   <div className="space-y-2">
-                    <span className="text-[10px] font-mono text-blue-400 uppercase tracking-[0.3em] font-black">Week {week.week}: {week.title}</span>
+                    <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-[0.3em] font-black">Week {week.week}: {week.title}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="stat-box p-4 rounded-xl">
+                      <motion.div whileHover={{ scale: 1.02 }} className="stat-box p-4 rounded-none">
                         <span className="text-[9px] text-white/30 uppercase font-bold tracking-widest mb-2 block">DSA Path</span>
                         <ul className="text-[11px] space-y-1">
                           {week.dsa.map((item, i) => <li key={i} className="flex items-center gap-2">
-                            <Sword className="w-2.5 h-2.5 text-amber-500/50" /> {item}
+                            <Sword className="w-2.5 h-2.5 text-neutral-500" /> {item}
                           </li>)}
                         </ul>
-                      </div>
-                      <div className="stat-box p-4 rounded-xl">
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} className="stat-box p-4 rounded-none">
                         <span className="text-[9px] text-white/30 uppercase font-bold tracking-widest mb-2 block">AI/ML Path</span>
                         <ul className="text-[11px] space-y-1">
                           {week.ai_ml.map((item, i) => <li key={i} className="flex items-center gap-2">
-                            <Zap className="w-2.5 h-2.5 text-purple-500/50" /> {item}
+                            <Zap className="w-2.5 h-2.5 text-neutral-600" /> {item}
                           </li>)}
                         </ul>
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
                 </div>
@@ -873,12 +1012,12 @@ function RoadmapView() {
 
           <div className="space-y-6">
             <div className="flex items-center gap-4 border-b border-white/10 pb-4">
-              <HeartPulse className="w-8 h-8 text-red-500" />
+              <HeartPulse className="w-8 h-8 text-neutral-400" />
               <h2 className="fantasy-title text-3xl">The Physique Forge</h2>
             </div>
-            <div className="stat-box p-8 rounded-3xl space-y-8 bg-black/40">
+            <div className="stat-box p-8 rounded-3xl space-y-8 bg-black/40 border-white/10">
                <div className="space-y-2">
-                 <h4 className="fantasy-title text-lg text-amber-500">V-Taper Blueprint</h4>
+                 <h4 className="fantasy-title text-lg text-white">V-Taper Blueprint</h4>
                  <p className="text-[11px] text-white/40 leading-relaxed uppercase tracking-widest font-mono">Focus on Lateral Raises, Lat Pulldowns, and Core. Avoid Spinal Compression.</p>
                </div>
 
@@ -890,17 +1029,17 @@ function RoadmapView() {
                     { day: 'Sat', muscle: 'Light Full Body', tools: 'Mobility & Active Recovery' }
                   ].map((split, i) => (
                     <div key={i} className="flex items-start gap-6 border-b border-white/5 pb-6 last:border-0 last:pb-0">
-                      <div className="w-20 text-[10px] font-black uppercase text-amber-500/70 pt-1 tracking-widest">{split.day}</div>
+                      <div className="w-20 text-[10px] font-black uppercase text-white/50 pt-1 tracking-widest">{split.day}</div>
                       <div className="space-y-1 flex-1">
-                        <div className="font-bold text-sm tracking-tight">{split.muscle}</div>
+                        <div className="font-bold text-sm tracking-tight text-white">{split.muscle}</div>
                         <div className="text-[10px] text-white/30 uppercase font-mono tracking-widest">{split.tools}</div>
                       </div>
                     </div>
                   ))}
                </div>
 
-               <div className="p-6 bg-red-500/5 border border-red-500/10 rounded-xl space-y-2">
-                  <h5 className="text-[10px] font-black uppercase text-red-500 flex items-center gap-2">
+             <div className="p-6 bg-white/5 border border-white/10 rounded-xl space-y-2">
+                  <h5 className="text-[10px] font-black uppercase text-white flex items-center gap-2">
                     <XCircle className="w-3 h-3" /> SPINE PROTECTION PROTOCOL
                   </h5>
                   <p className="text-[11px] text-white/40 italic">
@@ -914,35 +1053,150 @@ function RoadmapView() {
   );
 }
 
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+
+function ProgressView({ quests, profile }: { quests: Quest[], profile: UserProfile }) {
+  const categories = ['Might', 'Arcane', 'Endurance', 'Discipline', 'General'];
+  
+  const categoryStats = categories.map(cat => ({
+    name: cat,
+    completed: quests.filter(q => q.category === cat && q.status === 'Completed').length,
+    active: quests.filter(q => q.category === cat && q.status !== 'Completed').length,
+    xp: quests.filter(q => q.category === cat && q.status === 'Completed').length * 10 
+  }));
+
+  const pieData = categoryStats.map(stat => ({
+    name: stat.name,
+    value: stat.completed
+  })).filter(d => d.value > 0);
+
+  const COLORS = ['#FFFFFF', '#A3A3A3', '#525252', '#262626', '#737373'];
+
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12 pb-24 water-flow p-8 rounded-none min-h-[80vh]">
+      <div className="text-center space-y-4 max-w-2x mx-auto">
+        <h1 className="fantasy-title text-5xl tracking-tighter text-white glitch-text">Evolution Analytics</h1>
+        <p className="text-white/40 text-[10px] font-mono uppercase tracking-[0.4em]">Visualizing the transmutation of self.</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="stat-box p-8 rounded-3xl space-y-6">
+          <h3 className="fantasy-title text-xl text-white border-b border-white/10 pb-4">Specialization Distribution</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData.length > 0 ? pieData : [{ name: 'No Data', value: 1 }]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                  {pieData.length === 0 && <Cell key="empty" fill="#262626" />}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#000', border: '1px solid #333', fontSize: '10px', textTransform: 'uppercase' }}
+                  itemStyle={{ color: '#fff' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex flex-wrap justify-center gap-6">
+            {categoryStats.map((stat, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                <span className="text-[10px] font-mono font-bold text-white/60 tracking-wider uppercase">{stat.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="stat-box p-8 rounded-3xl space-y-6">
+          <h3 className="fantasy-title text-xl text-white border-b border-white/10 pb-4">Mastery Arc</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={categoryStats}>
+                <XAxis dataKey="name" stroke="#555" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis stroke="#555" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                  contentStyle={{ backgroundColor: '#000', border: '1px solid #333', fontSize: '10px' }}
+                />
+                <Bar dataKey="completed" name="Completed" fill="#FFFFFF" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="active" name="In Progress" fill="#262626" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-[10px] text-white/30 font-mono text-center uppercase tracking-widest italic">
+            "Numbers do not lie. Discipline is measured in repetitions."
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {categoryStats.map((stat, i) => (
+          <motion.div 
+            whileHover={{ y: -10, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}
+            key={i} 
+            className="stat-box p-6 rounded-none space-y-4"
+          >
+             <div className="flex justify-between items-center">
+                <span className="text-xs font-black uppercase tracking-widest text-white/80">{stat.name} Mastery</span>
+                <span className="text-[10px] font-mono text-white/40">{stat.completed} / {stat.completed + stat.active}</span>
+             </div>
+             <div className="h-2 bg-black rounded-none overflow-hidden border border-white/5">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(stat.completed / Math.max(1, stat.completed + stat.active)) * 100}%` }}
+                  className="h-full bg-white progress-bar-glow"
+                />
+             </div>
+             <div className="flex justify-between text-[8px] font-mono text-white/20 uppercase tracking-[0.2em]">
+                <span>Category XP: {stat.xp}</span>
+                <span>Lvl {Math.floor(stat.xp / 50) + 1}</span>
+             </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 function Leaderboard() {
   const mockLegends = [
-    { name: 'The Architect', level: 99, xp: 99420, class: 'Mage' },
-    { name: 'Sir Grinds-a-lot', level: 82, xp: 82100, class: 'Paladin' },
-    { name: 'Night Ninja', level: 75, xp: 75050, class: 'Rogue' },
+    { name: 'The Architect', level: 99, xp: 99420, class: 'Zen Warrior' },
+    { name: 'Monochrome Shadow', level: 82, xp: 82100, class: 'Flow Master' },
+    { name: 'Void Hunter', level: 75, xp: 75050, class: 'Code Wraith' },
   ];
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
       <div className="text-center space-y-4">
-        <h2 className="fantasy-title text-5xl text-amber-500">Hall of Legends</h2>
-        <p className="text-white/40 text-xs font-mono uppercase tracking-[0.4em]">The elite who mastered the local domain.</p>
+        <h2 className="fantasy-title text-5xl text-white glitch-text">Hall of Legends</h2>
+        <p className="text-white/40 text-xs font-mono uppercase tracking-[0.4em]">The elite who mastered the flow.</p>
       </div>
-      <div className="max-w-3xl mx-auto stat-box rounded-2xl overflow-hidden shadow-2xl">
-        <div className="grid grid-cols-4 p-4 border-b-2 border-white/10 text-[10px] uppercase font-black font-mono tracking-widest text-[#d4af37]/60 bg-white/5">
+      <div className="max-w-3xl mx-auto stat-box rounded-none overflow-hidden shadow-2xl">
+        <div className="grid grid-cols-4 p-4 border-b-2 border-white/10 text-[10px] uppercase font-black font-mono tracking-widest text-white/60 bg-white/5">
            <div className="col-span-2">Adventurer</div>
            <div className="text-right">Level</div>
            <div className="text-right">Total XP</div>
         </div>
         <div className="divide-y divide-white/5 bg-black/20">
           {mockLegends.map((entry, idx) => (
-            <div key={idx} className="grid grid-cols-4 p-8 hover:bg-amber-500/5 transition-all items-center group">
+            <div key={idx} className="grid grid-cols-4 p-8 hover:bg-white/5 transition-all items-center group font-mono">
                <div className="col-span-2 flex items-center gap-6">
-                 <span className="font-mono text-[#d4af37]/40 w-6 text-sm">{idx + 1}</span>
-                 <img src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${entry.name}`} alt="avatar" className="w-12 h-12 bg-white/5 border-2 border-white/10 rounded-lg group-hover:scale-110 transition-transform" />
-                 <span className={cn("fantasy-title text-lg tracking-tight", idx === 0 ? "text-amber-400" : "text-white/80")}>{entry.name}</span>
+                 <span className="font-mono text-white/20 w-6 text-sm">{idx + 1}</span>
+                 <img src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${entry.name}&backgroundColor=000000`} alt="avatar" className="w-12 h-12 bg-white/5 border-2 border-white/10 rounded-lg group-hover:scale-110 transition-transform" />
+                 <span className={cn("fantasy-title text-lg tracking-tight", idx === 0 ? "text-white" : "text-white/60")}>{entry.name}</span>
                </div>
-               <div className="text-right font-mono text-sm font-bold">{entry.level}</div>
-               <div className="text-right font-mono text-amber-500 font-bold text-lg">{entry.xp}</div>
+               <div className="text-right text-sm font-bold text-neutral-400">{entry.level}</div>
+               <div className="text-right text-white font-bold text-lg">{entry.xp}</div>
             </div>
           ))}
         </div>
