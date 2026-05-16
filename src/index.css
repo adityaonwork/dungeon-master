@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-fantasy: "Uncial Antiqua", serif;
+}
+
+@layer base {
+  body {
+    @apply bg-[#0c0c0e] text-[#e2e8f0];
+    -webkit-font-smoothing: antialiased;
+    perspective: 1000px;
+  }
+}
+
+@layer components {
+  .card-3d {
+    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    transform-style: preserve-3d;
+  }
+  
+  .card-3d:hover {
+    transform: rotateX(2deg) rotateY(-2deg) translateY(-5px);
+  }
+
+  .fantasy-title {
+    @apply font-fantasy uppercase tracking-[0.05em];
+  }
+
+  .stat-box {
+    @apply bg-white/3 border-2 border-white/10 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)];
+  }
+
+  .active-quest {
+    @apply border-l-4 border-amber-500 bg-gradient-to-r from-amber-500/10 to-transparent;
+  }
+
+  .wealth-mode {
+    @apply border-2 border-[#d4af37] bg-gradient-to-br from-[#d4af37]/10 to-transparent;
+  }
+  
+  .progress-bar-glow {
+    @apply shadow-[0_0_20px_rgba(59,130,246,0.3)];
+  }
+}
+
+@layer utilities {
+  .atmosphere {
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .diagonal-stripes {
+    background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.1) 75%, transparent 75%, transparent);
+    background-size: 20px 20px;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0c0c0e;
+}
+::-webkit-scrollbar-thumb {
+  background: #f59e0b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d97706;
+}
+

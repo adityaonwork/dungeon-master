@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Catch-all deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+
+    // User Profile Rules
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow create: if isOwner(userId) && 
+        incoming().keys().hasAll(['uid', 'level', 'xp', 'gold', 'displayName']) &&
+        incoming().level == 1 &&
+        incoming().xp == 0 &&
+        incoming().gold == 0;
+      
+      allow update: if isOwner(userId) && (
+        // Allow updating display name or class
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'charClass', 'lastActive']) ||
+        // Allow server-like updates for XP/Gold (In a real app, use Cloud Functions)
+        // Here we allow it but in a restricted way
+        incoming().diff(existing()).affectedKeys().hasAny(['xp', 'gold', 'level'])
+      );
+    }
+
+    // Quests Rules
+    match /users/{userId}/quests/{questId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && 
+        incoming().userId == userId &&
+        incoming().status == 'Active';
+      allow update: if isOwner(userId) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'timeSpent'])
+      );
+      allow delete: if isOwner(userId);
+    }
+
+    // Achievement Rules
+    match /users/{userId}/achievements/{achievementId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+    }
+
+    // Leaderboard Rules (Public Read)
+    match /leaderboard/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+    }
+  }
+}

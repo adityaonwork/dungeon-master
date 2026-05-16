@@ -1,0 +1,8 @@
+{
+  "name": "Dungeon Quest: Daily Mastery",
+  "description": "A gamified productivity tracker where your daily tasks become epic dungeon quests. Compare your progress against the 'Royal Standard', level up your character, and climb the leaderboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
