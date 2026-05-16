@@ -180,14 +180,14 @@ export default function App() {
       </div>
 
       {/* Header / HUD */}
-      <header className="border-b border-white/10 bg-black/40 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-black/40 backdrop-blur-md sticky top-0 z-[60]">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-              <Shield className="w-6 h-6 text-white shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
-              <span className="fantasy-title text-xl group-hover:text-neutral-300 transition-colors glitch-text">DUNGEON QUEST</span>
+              <Shield className="w-4 h-4 md:w-5 md:h-5 text-white shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+              <span className="fantasy-title text-sm md:text-xl group-hover:text-neutral-300 transition-colors glitch-text">DUNGEON QUEST</span>
             </div>
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-1">
               {[
                 { id: 'dashboard', icon: LayoutDashboard, label: 'HUB' },
                 { id: 'quests', icon: Scroll, label: 'QUESTS' },
@@ -195,7 +195,7 @@ export default function App() {
                 { id: 'roadmap', icon: BookOpen, label: 'ROADMAP' },
                 { id: 'leaderboard', icon: Trophy, label: 'SQUAD' }
               ].map(tab => (
-                <button
+                <button 
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={cn(
@@ -209,20 +209,42 @@ export default function App() {
               ))}
             </nav>
           </div>
-          
-          <div className="flex items-center gap-4">
+
+          <div className="flex items-center gap-2 md:gap-4">
             <div className="flex flex-col items-end">
-              <span className="text-[10px] font-mono text-white/40 uppercase tracking-widest flex items-center gap-1">
-                <Flame className="w-2.5 h-2.5 text-white/50" /> Day {profile.challengeDays} Streak
+              <span className="text-[8px] md:text-[10px] font-mono text-white/40 uppercase tracking-widest flex items-center gap-1">
+                <Flame className="w-2 h-2 md:w-2.5 md:h-2.5 text-white/50" /> {profile.challengeDays} Streak
               </span>
-              <span className="text-xs font-bold text-white uppercase tracking-widest font-mono">{profile.gold} GOLD</span>
+              <span className="text-[10px] md:text-xs font-bold text-white uppercase tracking-widest font-mono">{profile.gold}G</span>
             </div>
-            <div className="w-10 h-10 border-2 border-white/30 overflow-hidden bg-white/5 rounded-lg shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+            <div className="w-6 h-6 md:w-8 md:h-8 border border-white/30 overflow-hidden bg-white/5 rounded-none shadow-[0_0_10px_rgba(255,255,255,0.2)]">
               <img src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${profile.displayName}&backgroundColor=000000`} alt="avatar" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
       </header>
+
+      {/* Mobile Nav Bar */}
+      <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50 bg-black/80 backdrop-blur-xl border border-white/20 p-2 flex items-center justify-around shadow-2xl">
+        {[
+          { id: 'dashboard', icon: LayoutDashboard },
+          { id: 'quests', icon: Scroll },
+          { id: 'progress', icon: Zap },
+          { id: 'roadmap', icon: BookOpen },
+          { id: 'leaderboard', icon: Trophy }
+        ].map(tab => (
+          <button 
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={cn(
+              "p-3 transition-all rounded-none",
+              activeTab === tab.id ? "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]" : "text-white/40"
+            )}
+          >
+            <tab.icon className="w-5 h-5" />
+          </button>
+        ))}
+      </div>
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8">
         <AnimatePresence mode="wait">
@@ -363,7 +385,7 @@ function Dashboard({ profile, setProfile, quests, setQuests, setActiveTab, setSh
              <img 
                src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${profile.displayName}&size=200&backgroundColor=000000`} 
                alt="char" 
-               className="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500" 
+               className="w-full h-full object-contain p-20 group-hover:scale-110 transition-transform duration-500" 
              />
              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
              <div className="absolute bottom-6 left-6 right-6">
@@ -381,29 +403,29 @@ function Dashboard({ profile, setProfile, quests, setQuests, setActiveTab, setSh
         </div>
       </div>
 
-      <div className="col-span-12 lg:col-span-9 space-y-8">
-        <div className="danger-mode p-8 space-y-6 relative overflow-hidden rounded-none">
-          <div className="absolute top-0 right-0 p-2 opacity-5">
+      <div className="col-span-12 lg:col-span-9 space-y-8 pb-24 lg:pb-0">
+        <div className="danger-mode p-4 md:p-8 space-y-6 relative overflow-hidden rounded-none">
+          <div className="absolute top-0 right-0 p-2 opacity-5 hidden md:block">
             <Shield className="w-48 h-48" />
           </div>
           
           <div className="space-y-4">
-            <h3 className="fantasy-title text-3xl text-white glitch-text">Current Phase: {currentWeek.title}</h3>
-            <p className="text-white/40 text-[10px] font-mono tracking-widest uppercase">75-Day Zero-to-Hero Challenge</p>
+            <h3 className="fantasy-title text-xl md:text-3xl text-white glitch-text">Current Phase: {currentWeek.title}</h3>
+            <p className="text-white/40 text-[8px] md:text-[10px] font-mono tracking-widest uppercase">75-Day Zero-to-Hero Challenge</p>
             <div className="flex flex-wrap gap-2 pt-2">
                {currentWeek.dsa.slice(0, 3).map((tag, i) => (
-                 <span key={i} className="px-3 py-1 bg-white/10 text-white border border-white/20 text-[9px] font-black uppercase tracking-widest rounded-none">{tag}</span>
+                 <span key={i} className="px-2 md:px-3 py-1 bg-white/10 text-white border border-white/20 text-[8px] md:text-[9px] font-black uppercase tracking-widest rounded-none">{tag}</span>
                ))}
                {currentWeek.ai_ml.slice(0, 2).map((tag, i) => (
-                 <span key={i} className="px-3 py-1 bg-neutral-800 text-neutral-400 border border-neutral-700 text-[9px] font-black uppercase tracking-widest rounded-none">{tag}</span>
+                 <span key={i} className="px-2 md:px-3 py-1 bg-neutral-800 text-neutral-400 border border-neutral-700 text-[8px] md:text-[9px] font-black uppercase tracking-widest rounded-none">{tag}</span>
                ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatBox icon={Scroll} label="Quests Cleared" value={`${completedCount}/${activeCount + completedCount}`} />
-            <StatBox icon={Coins} label="Gold Stash" value={profile.gold.toString()} color="text-white" />
-            <StatBox icon={Flame} label="Daily Streak" value={profile.challengeDays.toString()} color="text-neutral-400" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+            <StatBox icon={Scroll} label="Quests" value={`${completedCount}/${activeCount + completedCount}`} />
+            <StatBox icon={Coins} label="Gold" value={profile.gold.toString()} color="text-white" />
+            <StatBox icon={Flame} label="Daily" value={profile.challengeDays.toString()} color="text-neutral-400" />
           </div>
 
           {!verdict ? (
@@ -711,18 +733,18 @@ function QuestBoard({ profile, quests, setQuests }: { profile: UserProfile, ques
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-      <div className="flex items-center justify-between">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 pb-32 lg:pb-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="text-3xl font-bold uppercase tracking-tighter">Quest Board</h2>
-          <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-mono">Accept contracts to forge your destiny.</p>
+          <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter">Quest Board</h2>
+          <p className="text-[9px] md:text-[10px] text-white/30 uppercase tracking-[0.2em] font-mono">Accept contracts to forge your destiny.</p>
         </div>
         <button 
           onClick={loadRoadmapQuests}
-          className="px-6 py-2 bg-white/10 text-white border border-white/30 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-2 rounded-lg"
+          className="w-full md:w-auto px-6 py-2 bg-white/10 text-white border border-white/30 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 rounded-lg"
         >
           <BookOpen className="w-4 h-4" />
-          Import from Roadmap
+          Roadmap Bounties
         </button>
       </div>
 
@@ -925,9 +947,9 @@ function QuestBoard({ profile, quests, setQuests }: { profile: UserProfile, ques
 
 function RoadmapView() {
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 pb-24 water-flow p-8 rounded-3xl">
-       <div className="text-center space-y-4 max-w-3xl mx-auto">
-         <h1 className="fantasy-title text-5xl text-white tracking-tighter">75-Day Quest Codex</h1>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 pb-32 water-flow p-4 md:p-8 rounded-none">
+       <div className="text-center space-y-4 max-w-3xl mx-auto pt-6 lg:pt-0">
+         <h1 className="fantasy-title text-5xl text-white tracking-tighter glitch-text">75-Day Quest Codex</h1>
          <p className="text-white/40 text-xs sm:text-sm uppercase tracking-[0.3em] font-mono leading-relaxed">
            Transformation is not an event. It is a series of brutal, disciplined repetitions. 
            BTech 2nd Year Mastery Arc: DSA + AI/ML + Physical Ascension.
@@ -936,24 +958,32 @@ function RoadmapView() {
 
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
          {CORE_RULES.map((rule, idx) => (
-           <div key={idx} className="stat-box p-6 border-l-4 border-white rounded-r-xl bg-white/5">
+           <motion.div 
+             whileHover={{ scale: 1.05, borderColor: 'rgba(255,255,255,0.8)' }}
+             key={idx} 
+             className="stat-box p-6 border-l-4 border-white rounded-none bg-white/5"
+           >
              <span className="text-white font-mono text-[10px] font-black uppercase mb-1 block tracking-widest">Commandment {idx + 1}</span>
              <p className="text-xs font-bold leading-relaxed">{rule}</p>
-           </div>
+           </motion.div>
          ))}
        </div>
 
        <div className="space-y-8">
          <div className="flex items-center gap-4">
            <HeartPulse className="w-6 h-6 text-white" />
-           <h2 className="fantasy-title text-2xl">Daily Spine Rehab & Mobility</h2>
+           <h2 className="fantasy-title text-2xl glitch-text">Daily Spine Rehab & Mobility</h2>
          </div>
          <div className="flex flex-wrap gap-3">
            {DAILY_REHAB.map((ex, i) => (
-             <div key={i} className="px-6 py-3 stat-box rounded-lg flex items-center gap-3 hover:bg-white/5 transition-all">
-               <div className="w-1.5 h-1.5 rounded-full bg-white" />
+             <motion.div 
+               whileHover={{ x: 5, backgroundColor: 'rgba(255,255,255,0.1)' }}
+               key={i} 
+               className="px-6 py-3 stat-box rounded-none flex items-center gap-3 transition-all"
+             >
+               <div className="w-1.5 h-1.5 rounded-none bg-white" />
                <span className="text-[11px] font-black uppercase tracking-widest">{ex}</span>
-             </div>
+             </motion.div>
            ))}
          </div>
        </div>
@@ -966,7 +996,10 @@ function RoadmapView() {
             </div>
             
             <div className="space-y-4 mb-8">
-               <div className="stat-box p-6 bg-white/5 border-white/10 rounded-2xl">
+               <motion.div 
+                 whileHover={{ skewX: -2 }}
+                 className="stat-box p-6 bg-white/5 border-white/10 rounded-none"
+               >
                  <h4 className="text-xs font-black uppercase tracking-widest text-white mb-2">Shadow Tip: Persistent Progress</h4>
                  <p className="text-[10px] text-white/40 leading-relaxed uppercase font-mono">
                    Your progress is automatically saved to your browser. To back up your journey or share your code:
@@ -977,15 +1010,15 @@ function RoadmapView() {
                    <br/>
                    3. Push your projects to GitHub to complete the "Shadow Monarch" legacy.
                  </p>
-               </div>
+               </motion.div>
             </div>
 
             <div className="space-y-8">
               {ROADMAP_WEEKS.map((week) => (
-                <div key={week.week} className="relative pl-8 border-l border-white/10 group">
-                  <div className="absolute top-0 -left-[5px] w-[9px] h-[9px] rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] group-hover:scale-125 transition-transform" />
+                <div key={week.week} className="relative pl-6 md:pl-8 border-l border-white/10 group">
+                  <div className="absolute top-0 -left-[5px] w-[9px] h-[9px] rounded-none bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] group-hover:scale-125 transition-transform" />
                   <div className="space-y-2">
-                    <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-[0.3em] font-black">Week {week.week}: {week.title}</span>
+                    <span className="text-[9px] md:text-[10px] font-mono text-neutral-400 uppercase tracking-[0.3em] font-black">Week {week.week}: {week.title}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <motion.div whileHover={{ scale: 1.02 }} className="stat-box p-4 rounded-none">
                         <span className="text-[9px] text-white/30 uppercase font-bold tracking-widest mb-2 block">DSA Path</span>
@@ -1015,7 +1048,7 @@ function RoadmapView() {
               <HeartPulse className="w-8 h-8 text-neutral-400" />
               <h2 className="fantasy-title text-3xl">The Physique Forge</h2>
             </div>
-            <div className="stat-box p-8 rounded-3xl space-y-8 bg-black/40 border-white/10">
+            <div className="stat-box p-8 rounded-none space-y-8 bg-black/40 border-white/10">
                <div className="space-y-2">
                  <h4 className="fantasy-title text-lg text-white">V-Taper Blueprint</h4>
                  <p className="text-[11px] text-white/40 leading-relaxed uppercase tracking-widest font-mono">Focus on Lateral Raises, Lat Pulldowns, and Core. Avoid Spinal Compression.</p>
@@ -1028,17 +1061,21 @@ function RoadmapView() {
                     { day: 'Wed', muscle: 'Core & Rehab', tools: 'McGill Curl-up, Side Planks, Glute Bridges' },
                     { day: 'Sat', muscle: 'Light Full Body', tools: 'Mobility & Active Recovery' }
                   ].map((split, i) => (
-                    <div key={i} className="flex items-start gap-6 border-b border-white/5 pb-6 last:border-0 last:pb-0">
+                    <motion.div 
+                      whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,0.02)' }}
+                      key={i} 
+                      className="flex items-start gap-6 border-b border-white/5 pb-6 last:border-0 last:pb-0 p-2 transition-all cursor-default"
+                    >
                       <div className="w-20 text-[10px] font-black uppercase text-white/50 pt-1 tracking-widest">{split.day}</div>
                       <div className="space-y-1 flex-1">
                         <div className="font-bold text-sm tracking-tight text-white">{split.muscle}</div>
                         <div className="text-[10px] text-white/30 uppercase font-mono tracking-widest">{split.tools}</div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                </div>
 
-             <div className="p-6 bg-white/5 border border-white/10 rounded-xl space-y-2">
+             <div className="p-6 bg-white/5 border border-white/10 rounded-none space-y-2">
                   <h5 className="text-[10px] font-black uppercase text-white flex items-center gap-2">
                     <XCircle className="w-3 h-3" /> SPINE PROTECTION PROTOCOL
                   </h5>
@@ -1052,8 +1089,6 @@ function RoadmapView() {
     </motion.div>
   );
 }
-
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
 function ProgressView({ quests, profile }: { quests: Quest[], profile: UserProfile }) {
   const categories = ['Might', 'Arcane', 'Endurance', 'Discipline', 'General'];
@@ -1073,29 +1108,29 @@ function ProgressView({ quests, profile }: { quests: Quest[], profile: UserProfi
   const COLORS = ['#FFFFFF', '#A3A3A3', '#525252', '#262626', '#737373'];
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12 pb-24 water-flow p-8 rounded-none min-h-[80vh]">
-      <div className="text-center space-y-4 max-w-2x mx-auto">
-        <h1 className="fantasy-title text-5xl tracking-tighter text-white glitch-text">Evolution Analytics</h1>
-        <p className="text-white/40 text-[10px] font-mono uppercase tracking-[0.4em]">Visualizing the transmutation of self.</p>
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12 pb-32 lg:pb-0 water-flow p-4 md:p-8 rounded-none min-h-[80vh]">
+      <div className="text-center space-y-4 max-w-2x mx-auto pt-6 lg:pt-0">
+        <h1 className="fantasy-title text-2xl md:text-5xl tracking-tighter text-white glitch-text">Evolution Analytics</h1>
+        <p className="text-white/40 text-[8px] md:text-[10px] font-mono uppercase tracking-[0.4em]">Visualizing the transmutation of self.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="stat-box p-8 rounded-3xl space-y-6">
-          <h3 className="fantasy-title text-xl text-white border-b border-white/10 pb-4">Specialization Distribution</h3>
-          <div className="h-[300px] w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
+        <div className="stat-box p-6 md:p-8 rounded-none space-y-6 hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] transition-all overflow-hidden">
+          <h3 className="fantasy-title text-base md:text-xl text-white border-b border-white/10 pb-4 glitch-text text-center lg:text-left">Distribution</h3>
+          <div className="h-[250px] md:h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={pieData.length > 0 ? pieData : [{ name: 'No Data', value: 1 }]}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  innerRadius={50}
+                  outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
                   stroke="none"
                 >
-                  {pieData.map((entry, index) => (
+                  {pieData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                   {pieData.length === 0 && <Cell key="empty" fill="#262626" />}
@@ -1107,59 +1142,55 @@ function ProgressView({ quests, profile }: { quests: Quest[], profile: UserProfi
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
             {categoryStats.map((stat, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                <span className="text-[10px] font-mono font-bold text-white/60 tracking-wider uppercase">{stat.name}</span>
-              </div>
+              <motion.div whileHover={{ scale: 1.1 }} key={i} className="flex items-center gap-2">
+                <div className="w-2 h-2 md:w-3 md:h-3 rounded-none" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                <span className="text-[8px] md:text-[10px] font-mono font-bold text-white/60 tracking-wider uppercase">{stat.name}</span>
+              </motion.div>
             ))}
           </div>
         </div>
 
-        <div className="stat-box p-8 rounded-3xl space-y-6">
-          <h3 className="fantasy-title text-xl text-white border-b border-white/10 pb-4">Mastery Arc</h3>
-          <div className="h-[300px] w-full">
+        <div className="stat-box p-6 md:p-8 rounded-none space-y-6 hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] transition-all">
+          <h3 className="fantasy-title text-base md:text-xl text-white border-b border-white/10 pb-4 glitch-text text-center lg:text-left">Mastery Arc</h3>
+          <div className="h-[250px] md:h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryStats}>
-                <XAxis dataKey="name" stroke="#555" fontSize={10} tickLine={false} axisLine={false} />
-                <YAxis stroke="#555" fontSize={10} tickLine={false} axisLine={false} />
+                <XAxis dataKey="name" stroke="#555" fontSize={8} tickLine={false} axisLine={false} />
+                <YAxis stroke="#555" fontSize={8} tickLine={false} axisLine={false} />
                 <Tooltip 
                   cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                   contentStyle={{ backgroundColor: '#000', border: '1px solid #333', fontSize: '10px' }}
                 />
-                <Bar dataKey="completed" name="Completed" fill="#FFFFFF" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="active" name="In Progress" fill="#262626" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="completed" name="Completed" fill="#FFFFFF" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="active" name="In Progress" fill="#262626" radius={[0, 0, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-[10px] text-white/30 font-mono text-center uppercase tracking-widest italic">
-            "Numbers do not lie. Discipline is measured in repetitions."
+          <p className="text-[8px] md:text-[10px] text-white/30 font-mono text-center uppercase tracking-widest italic">
+            "Numbers do not lie."
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {categoryStats.map((stat, i) => (
           <motion.div 
-            whileHover={{ y: -10, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}
+            whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}
             key={i} 
-            className="stat-box p-6 rounded-none space-y-4"
+            className="stat-box p-4 md:p-6 rounded-none space-y-4"
           >
              <div className="flex justify-between items-center">
-                <span className="text-xs font-black uppercase tracking-widest text-white/80">{stat.name} Mastery</span>
-                <span className="text-[10px] font-mono text-white/40">{stat.completed} / {stat.completed + stat.active}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{stat.name} Mastery</span>
+                <span className="text-[8px] font-mono text-white/40">{stat.completed} / {stat.completed + stat.active}</span>
              </div>
-             <div className="h-2 bg-black rounded-none overflow-hidden border border-white/5">
+             <div className="h-1.5 md:h-2 bg-black rounded-none overflow-hidden border border-white/5">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${(stat.completed / Math.max(1, stat.completed + stat.active)) * 100}%` }}
-                  className="h-full bg-white progress-bar-glow"
+                  className="h-full bg-white progress-bar-glow shadow-[0_0_10px_white]"
                 />
-             </div>
-             <div className="flex justify-between text-[8px] font-mono text-white/20 uppercase tracking-[0.2em]">
-                <span>Category XP: {stat.xp}</span>
-                <span>Lvl {Math.floor(stat.xp / 50) + 1}</span>
              </div>
           </motion.div>
         ))}
@@ -1176,28 +1207,37 @@ function Leaderboard() {
   ];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
-      <div className="text-center space-y-4">
-        <h2 className="fantasy-title text-5xl text-white glitch-text">Hall of Legends</h2>
-        <p className="text-white/40 text-xs font-mono uppercase tracking-[0.4em]">The elite who mastered the flow.</p>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 pb-32 lg:pb-0">
+      <div className="text-center space-y-4 pt-6 md:pt-0">
+        <h2 className="fantasy-title text-3xl md:text-5xl text-white glitch-text">Hall of Legends</h2>
+        <p className="text-white/40 text-[9px] md:text-xs font-mono uppercase tracking-[0.4em]">The elite who mastered the flow.</p>
       </div>
       <div className="max-w-3xl mx-auto stat-box rounded-none overflow-hidden shadow-2xl">
-        <div className="grid grid-cols-4 p-4 border-b-2 border-white/10 text-[10px] uppercase font-black font-mono tracking-widest text-white/60 bg-white/5">
+        <div className="grid grid-cols-4 p-4 border-b-2 border-white/10 text-[8px] md:text-[10px] uppercase font-black font-mono tracking-widest text-white/60 bg-white/5">
            <div className="col-span-2">Adventurer</div>
            <div className="text-right">Level</div>
            <div className="text-right">Total XP</div>
         </div>
         <div className="divide-y divide-white/5 bg-black/20">
           {mockLegends.map((entry, idx) => (
-            <div key={idx} className="grid grid-cols-4 p-8 hover:bg-white/5 transition-all items-center group font-mono">
-               <div className="col-span-2 flex items-center gap-6">
-                 <span className="font-mono text-white/20 w-6 text-sm">{idx + 1}</span>
-                 <img src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${entry.name}&backgroundColor=000000`} alt="avatar" className="w-12 h-12 bg-white/5 border-2 border-white/10 rounded-lg group-hover:scale-110 transition-transform" />
-                 <span className={cn("fantasy-title text-lg tracking-tight", idx === 0 ? "text-white" : "text-white/60")}>{entry.name}</span>
+            <motion.div 
+              whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,0.05)' }} 
+              key={idx} 
+              className="grid grid-cols-4 p-4 md:p-8 border-b border-white/5 transition-all items-center group font-mono cursor-default last:border-0"
+            >
+               <div className="col-span-2 flex items-center gap-3 md:gap-6">
+                 <span className="font-mono text-white/20 w-4 md:w-6 text-[10px] md:text-sm">{idx + 1}</span>
+                 <motion.img 
+                   whileHover={{ rotate: 5, scale: 1.2 }}
+                   src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${entry.name}&backgroundColor=000000`} 
+                   alt="avatar" 
+                   className="w-8 h-8 md:w-12 md:h-12 bg-white/5 border-2 border-white/10 rounded-none group-hover:border-white transition-all shadow-[0_0_10px_rgba(255,255,255,0.1)]" 
+                 />
+                 <span className={cn("fantasy-title text-sm md:text-lg tracking-tight glitch-text", idx === 0 ? "text-white" : "text-white/60")}>{entry.name}</span>
                </div>
-               <div className="text-right text-sm font-bold text-neutral-400">{entry.level}</div>
-               <div className="text-right text-white font-bold text-lg">{entry.xp}</div>
-            </div>
+               <div className="text-right text-[10px] md:text-sm font-bold text-neutral-400">{entry.level}</div>
+               <div className="text-right text-white font-bold text-sm md:text-lg">{entry.xp}</div>
+            </motion.div>
           ))}
         </div>
       </div>
