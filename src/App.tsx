@@ -84,6 +84,29 @@ const INITIAL_PROFILE: UserProfile = {
   stats: { str: 10, int: 10, dex: 10 }
 };
 
+const CATEGORY_COLORS: Record<string, string> = {
+  Might: 'text-orange-500',
+  Arcane: 'text-cyan-400',
+  Endurance: 'text-emerald-400',
+  Discipline: 'text-fuchsia-500',
+  General: 'text-indigo-400'
+};
+
+const CATEGORY_BG: Record<string, string> = {
+  Might: 'bg-orange-500',
+  Arcane: 'bg-cyan-400',
+  Endurance: 'bg-emerald-400',
+  Discipline: 'bg-fuchsia-500',
+  General: 'bg-indigo-400'
+};
+
+const DIFFICULTY_COLORS: Record<string, string> = {
+  Easy: 'text-emerald-400',
+  Medium: 'text-yellow-400',
+  Hard: 'text-orange-500',
+  Epic: 'text-red-500 glitch-text'
+};
+
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(INITIAL_PROFILE);
   const [quests, setQuests] = useState<Quest[]>([]);
@@ -174,9 +197,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-white/20 overflow-x-hidden relative">
       {/* Background Atmosphere */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/5 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neutral-800/20 blur-[120px] rounded-full animate-pulse [animation-delay:2s]" />
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/10 blur-[150px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-fuchsia-500/10 blur-[150px] rounded-full animate-pulse [animation-delay:2s]" />
+        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-orange-500/10 blur-[120px] rounded-full animate-pulse [animation-delay:4s]" />
       </div>
 
       {/* Header / HUD */}
@@ -400,8 +424,9 @@ function Dashboard({ profile, setProfile, quests, setQuests, setActiveTab, setSh
         </motion.div>
 
         <div className="grid grid-cols-1 gap-4">
-          <SkillBar label="Might" value={profile.stats.str} color="bg-white" />
-          <SkillBar label="Arcane" value={profile.stats.int} color="bg-neutral-500" />
+          <SkillBar label="Might" value={profile.stats.str} color="bg-orange-500" />
+          <SkillBar label="Arcane" value={profile.stats.int} color="bg-cyan-400" />
+          <SkillBar label="Endurance" value={profile.stats.dex} color="bg-emerald-400" />
         </div>
       </div>
 
@@ -576,19 +601,16 @@ function QuestPreview({ quests, setQuests }: { quests: Quest[], setQuests: React
     <div className="space-y-3">
       {displayQuests.map(quest => (
         <div key={quest.id} className={cn(
-          "stat-box p-4 flex items-center justify-between group hover:bg-white/[0.08] transition-all rounded-xl",
+          "stat-box p-4 flex items-center justify-between group transition-all rounded-xl relative",
           (quest.status === 'Active' || quest.status === 'In-Progress') && "active-quest"
-        )}>
+        )} style={{ '--accent-color': quest.category ? CATEGORY_COLORS[quest.category]?.replace('text-', '') : 'white' } as any}>
           <div className="flex items-center gap-4">
             <div className={cn(
-              "w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]",
-              quest.difficulty === 'Easy' && "text-neutral-500 bg-neutral-500",
-              quest.difficulty === 'Medium' && "text-neutral-400 bg-neutral-400",
-              quest.difficulty === 'Hard' && "text-white bg-white",
-              quest.difficulty === 'Epic' && "text-neutral-200 bg-neutral-200"
+              "w-2 h-2 rounded-full shadow-[0_0_12px_currentColor]",
+              DIFFICULTY_COLORS[quest.difficulty]
             )} />
             <div>
-              <div className="fantasy-title text-sm group-hover:text-white transition-colors uppercase tracking-tight">{quest.title}</div>
+              <div className={cn("fantasy-title text-sm group-hover:text-white transition-colors uppercase tracking-tight", quest.category && CATEGORY_COLORS[quest.category])}>{quest.title}</div>
               <div className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-mono">
                 {quest.difficulty} / {quest.status === 'In-Progress' ? formatTime(quest.remainingSeconds) : `${quest.durationMinutes}m`}
               </div>
@@ -853,10 +875,7 @@ function QuestBoard({ profile, quests, setQuests }: { profile: UserProfile, ques
                     <div className="flex items-center gap-4 text-[10px] font-mono uppercase tracking-[0.3em] text-white/30">
                       <span className={cn(
                         "font-black tracking-tighter",
-                        quest.difficulty === 'Easy' && "text-neutral-400",
-                        quest.difficulty === 'Medium' && "text-neutral-300",
-                        quest.difficulty === 'Hard' && "text-neutral-200",
-                        quest.difficulty === 'Epic' && "text-white"
+                        DIFFICULTY_COLORS[quest.difficulty]
                       )}>{quest.difficulty}</span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
@@ -866,7 +885,7 @@ function QuestBoard({ profile, quests, setQuests }: { profile: UserProfile, ques
                       {quest.category && (
                         <>
                           <span>•</span>
-                          <span className="text-white/20">{quest.category}</span>
+                          <span className={cn("font-bold", CATEGORY_COLORS[quest.category])}>{quest.category}</span>
                         </>
                       )}
                     </div>
@@ -930,8 +949,8 @@ function QuestBoard({ profile, quests, setQuests }: { profile: UserProfile, ques
                              ) : '0%' 
                     }}
                     className={cn(
-                      "h-full duration-500 progress-bar-glow", 
-                      quest.status === 'Completed' ? "bg-white" : (quest.type === 'Side' ? "bg-neutral-400" : "bg-neutral-600")
+                      "h-full duration-500 progress-bar-glow shadow-[0_0_15px_currentColor]", 
+                      quest.status === 'Completed' ? "bg-white" : (quest.category ? CATEGORY_BG[quest.category] : "bg-neutral-600")
                     )} 
                   >
                      <div className="w-full h-full diagonal-stripes opacity-20"></div>
@@ -1016,25 +1035,31 @@ function RoadmapView() {
             </div>
 
             <div className="space-y-8">
-              {ROADMAP_WEEKS.map((week) => (
+              {ROADMAP_WEEKS.map((week, idx) => (
                 <div key={week.week} className="relative pl-6 md:pl-8 border-l border-white/10 group">
-                  <div className="absolute top-0 -left-[5px] w-[9px] h-[9px] rounded-none bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] group-hover:scale-125 transition-transform" />
+                  <div className={cn(
+                    "absolute top-0 -left-[5px] w-[9px] h-[9px] rounded-none shadow-[0_0_15px_currentColor] group-hover:scale-125 transition-transform",
+                    idx % 3 === 0 ? "bg-cyan-500 text-cyan-500" : idx % 3 === 1 ? "bg-fuchsia-500 text-fuchsia-500" : "bg-orange-500 text-orange-500"
+                  )} />
                   <div className="space-y-2">
-                    <span className="text-[9px] md:text-[10px] font-mono text-neutral-400 uppercase tracking-[0.3em] font-black">Week {week.week}: {week.title}</span>
+                    <span className={cn(
+                      "text-[9px] md:text-[10px] font-mono uppercase tracking-[0.3em] font-black",
+                      idx % 3 === 0 ? "text-cyan-400" : idx % 3 === 1 ? "text-fuchsia-400" : "text-orange-400"
+                    )}>Week {week.week}: {week.title}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <motion.div whileHover={{ scale: 1.02 }} className="stat-box p-4 rounded-none">
-                        <span className="text-[9px] text-white/30 uppercase font-bold tracking-widest mb-2 block">DSA Path</span>
+                      <motion.div whileHover={{ scale: 1.02, borderColor: 'rgba(34, 211, 238, 0.4)' }} className="stat-box p-4 rounded-none border-cyan-500/10">
+                        <span className="text-[9px] text-cyan-400/50 uppercase font-bold tracking-widest mb-2 block">DSA Path</span>
                         <ul className="text-[11px] space-y-1">
                           {week.dsa.map((item, i) => <li key={i} className="flex items-center gap-2">
-                            <Sword className="w-2.5 h-2.5 text-neutral-500" /> {item}
+                            <Sword className="w-2.5 h-2.5 text-cyan-500/50" /> {item}
                           </li>)}
                         </ul>
                       </motion.div>
-                      <motion.div whileHover={{ scale: 1.02 }} className="stat-box p-4 rounded-none">
-                        <span className="text-[9px] text-white/30 uppercase font-bold tracking-widest mb-2 block">AI/ML Path</span>
+                      <motion.div whileHover={{ scale: 1.02, borderColor: 'rgba(217, 70, 239, 0.4)' }} className="stat-box p-4 rounded-none border-fuchsia-500/10">
+                        <span className="text-[9px] text-fuchsia-400/50 uppercase font-bold tracking-widest mb-2 block">AI/ML Path</span>
                         <ul className="text-[11px] space-y-1">
                           {week.ai_ml.map((item, i) => <li key={i} className="flex items-center gap-2">
-                            <Zap className="w-2.5 h-2.5 text-neutral-600" /> {item}
+                            <Zap className="w-2.5 h-2.5 text-fuchsia-500/50" /> {item}
                           </li>)}
                         </ul>
                       </motion.div>
@@ -1107,7 +1132,7 @@ function ProgressView({ quests, profile }: { quests: Quest[], profile: UserProfi
     value: stat.completed
   })).filter(d => d.value > 0);
 
-  const COLORS = ['#FFFFFF', '#A3A3A3', '#525252', '#262626', '#737373'];
+  const COLORS = ['#F97316', '#22D3EE', '#34D399', '#D946EF', '#818CF8'];
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-12 pb-8 water-flow p-4 md:p-8 rounded-none min-h-[80vh]">
@@ -1179,19 +1204,20 @@ function ProgressView({ quests, profile }: { quests: Quest[], profile: UserProfi
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {categoryStats.map((stat, i) => (
           <motion.div 
-            whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}
+            whileHover={{ y: -5, boxShadow: `0 20px 40px ${COLORS[i % COLORS.length]}33` }}
             key={i} 
             className="stat-box p-4 md:p-6 rounded-none space-y-4"
           >
              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{stat.name} Mastery</span>
+                <span className={cn("text-[10px] font-black uppercase tracking-widest", CATEGORY_COLORS[stat.name])}>{stat.name} Mastery</span>
                 <span className="text-[8px] font-mono text-white/40">{stat.completed} / {stat.completed + stat.active}</span>
              </div>
              <div className="h-1.5 md:h-2 bg-black rounded-none overflow-hidden border border-white/5">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${(stat.completed / Math.max(1, stat.completed + stat.active)) * 100}%` }}
-                  className="h-full bg-white progress-bar-glow shadow-[0_0_10px_white]"
+                  className={cn("h-full progress-bar-glow", CATEGORY_BG[stat.name])}
+                  style={{ boxShadow: `0 0 15px ${COLORS[i % COLORS.length]}` }}
                 />
              </div>
           </motion.div>
